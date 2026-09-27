@@ -1,12 +1,12 @@
 import { useState } from "react";
 import "./App.css";
 
-const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", "SGD"];
+const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", ];
 
 export default function App() {
   const [amount, setAmount] = useState("1");
-  const [from, setFrom] = useState("USD");
-  const [to, setTo] = useState("EUR");
+  const [from, setFrom] = useState("SGD");
+  const [to, setTo] = useState("JPY");
   const [useCustomRate, setUseCustomRate] = useState(false);
   const [customRate, setCustomRate] = useState("");
   const [result, setResult] = useState(null);
