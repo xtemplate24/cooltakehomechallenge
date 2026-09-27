@@ -4,12 +4,19 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# NOTE: no package-lock.json exists yet for this app, so this uses
-# `npm install` for now. Once you've run the repo's "create-lockfile"
-# workflow against apps/app1/frontend, switch this to `npm ci` to match
-# the other apps (reproducible, faster installs).
+# Pull latest security patches for the OS-layer openssl libs (same pattern
+# as apps/landing's libexpat fix).
+RUN apk update && apk upgrade libssl3 libcrypto3
+
 COPY package*.json ./
-RUN npm install --omit=dev
+# npm ci installs exactly what's pinned in package-lock.json — reproducible,
+# and matches apps/landing's pattern. Then remove the npm CLI itself: we
+# only ever run `node server.js` at runtime, and npm's own vendored
+# dependency tree (tar, glob, minimatch, pacote, sigstore, etc., bundled
+# inside every node:*-alpine image) is what Trivy was flagging, not
+# anything in our package.json.
+RUN npm ci --omit=dev \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 COPY server.js ./
 COPY public ./public
