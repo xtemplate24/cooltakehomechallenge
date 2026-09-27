@@ -19,7 +19,7 @@ jobs:
       packages: write
     uses: ./.github/workflows/build-image.yaml
     with:
-      name: app1-backend-build
+      name: app1-backend
       context: apps/app1/backend
       manifest: app-deployments/app1/backend/deployment.yaml
       

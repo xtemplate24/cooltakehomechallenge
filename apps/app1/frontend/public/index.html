@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Currency Converter — app1</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="card">
+      <h1>Currency Converter</h1>
+      <p class="subtitle">app1 — test app</p>
+
+      <form id="convert-form">
+        <label for="amount">Amount</label>
+        <input type="number" id="amount" name="amount" min="0" step="any" value="1" required />
+
+        <div class="row">
+          <div class="field">
+            <label for="from">From</label>
+            <select id="from" name="from">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="AUD">AUD</option>
+              <option value="CAD">CAD</option>
+              <option value="CHF">CHF</option>
+              <option value="CNY">CNY</option>
+              <option value="INR">INR</option>
+              <option value="SGD">SGD</option>
+            </select>
+          </div>
+
+          <button type="button" id="swap" aria-label="Swap currencies">⇄</button>
+
+          <div class="field">
+            <label for="to">To</label>
+            <select id="to" name="to">
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+              <option value="AUD">AUD</option>
+              <option value="CAD">CAD</option>
+              <option value="CHF">CHF</option>
+              <option value="CNY">CNY</option>
+              <option value="INR">INR</option>
+              <option value="SGD">SGD</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="use-custom-rate" />
+          Use a custom exchange rate
+        </label>
+        <input
+          type="number"
+          id="custom-rate"
+          name="custom-rate"
+          min="0"
+          step="any"
+          placeholder="e.g. 1.08"
+          disabled
+        />
+
+        <button type="submit" class="primary">Convert</button>
+      </form>
+
+      <p id="result" aria-live="polite"></p>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
