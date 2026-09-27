@@ -21,7 +21,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: ghcr.io/xtemplate24/app1-frontend@sha256:284e21d8bdf5862e678cc55831f20842f182f003fa1297a6828091b5f02a0115
+          image: ghcr.io/xtemplate24/app1-frontend@sha256:1b2cdf84987929e922f99c538dd53fc925f441dc98f1ba63c3329bf1edceba80
           imagePullPolicy: IfNotPresent
           env:
             # Server-side calls only — never sent to the browser.
