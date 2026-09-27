@@ -22,3 +22,8 @@ tolerations:
   - key: node-role.kubernetes.io/control-plane
     operator: Exists
     effect: NoSchedule
+experimental:
+  plugins:
+    redirectErrors:
+      moduleName: github.com/indivisible/redirecterrors
+      version: v0.1.0
