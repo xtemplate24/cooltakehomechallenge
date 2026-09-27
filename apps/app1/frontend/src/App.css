@@ -1,22 +1,9 @@
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-  margin: 0;
-}
-
-body {
-  background: #101a1c;
-  color: #e8ecea;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+.page {
+  min-height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
+  padding: clamp(24px, 6vw, 96px);
 }
 
 .card {
@@ -25,18 +12,35 @@ body {
   background: #131f21;
   border: 1px solid #223133;
   border-radius: 10px;
-  padding: 28px 24px;
+  padding: 32px 28px;
+  animation: rise 700ms ease-out both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 h1 {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
   margin: 0 0 4px;
-  font-size: 1.5rem;
+  color: #f4f6f5;
 }
 
 .subtitle {
-  margin: 0 0 24px;
+  margin: 0 0 28px;
   color: #7e9296;
   font-size: 0.85rem;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 form {
@@ -48,7 +52,7 @@ form {
 label {
   font-size: 0.85rem;
   color: #b7c3c5;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 input,
@@ -60,6 +64,7 @@ select {
   border: 1px solid #223133;
   background: #0c1516;
   color: #e8ecea;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 input:disabled {
@@ -70,7 +75,7 @@ input:disabled {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .field {
@@ -82,7 +87,7 @@ input:disabled {
   margin-top: 0;
 }
 
-#swap {
+.swap {
   flex: none;
   height: 46px;
   width: 46px;
@@ -92,13 +97,20 @@ input:disabled {
   color: #e8ecea;
   font-size: 1.1rem;
   cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.swap:hover,
+.swap:focus-visible {
+  color: #f2a65a;
+  border-color: #f2a65a;
 }
 
 .checkbox-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 20px;
+  margin-top: 22px;
   font-size: 0.9rem;
   color: #e8ecea;
 }
@@ -108,29 +120,38 @@ input:disabled {
 }
 
 button.primary {
-  margin-top: 20px;
+  margin-top: 22px;
   padding: 14px;
   font-size: 1rem;
   font-weight: 600;
+  font-family: "Space Grotesk", sans-serif;
   border: none;
   border-radius: 6px;
   background: #f2a65a;
   color: #101a1c;
   cursor: pointer;
+  transition: opacity 150ms ease;
 }
 
-button.primary:active {
-  transform: translateY(1px);
+button.primary:hover {
+  opacity: 0.9;
 }
 
-#result {
-  margin-top: 20px;
-  min-height: 1.2em;
+button.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.result {
+  margin-top: 22px;
+  min-height: 1.4em;
   font-size: 0.95rem;
+  font-family: "IBM Plex Mono", monospace;
+  color: #6fd6c4;
   word-break: break-word;
 }
 
-#result.error {
+.result.error {
   color: #e07a6b;
 }
 
@@ -139,7 +160,7 @@ button.primary:active {
     flex-wrap: wrap;
   }
 
-  #swap {
+  .swap {
     order: 3;
     width: 100%;
   }

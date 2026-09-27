@@ -1,7 +1,16 @@
-# Single stage — this is a plain Node server serving static files,
-# no Vite/React build step is needed.
-FROM node:20-alpine
+# Build stage — compiles the React app to static files
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
+# Runtime stage — serves the built assets and proxies /api/convert to the
+# backend. (Unlike apps/landing, this can't drop to a plain nginx image:
+# the app-deployments manifest expects a server that reads BACKEND_URL
+# and forwards requests server-side, so Node stays in the final image.)
+FROM node:20-alpine
 WORKDIR /app
 
 # Pull latest security patches for the OS-layer openssl libs (same pattern
@@ -9,17 +18,16 @@ WORKDIR /app
 RUN apk update && apk upgrade libssl3 libcrypto3
 
 COPY package*.json ./
-# npm ci installs exactly what's pinned in package-lock.json — reproducible,
-# and matches apps/landing's pattern. Then remove the npm CLI itself: we
-# only ever run `node server.js` at runtime, and npm's own vendored
-# dependency tree (tar, glob, minimatch, pacote, sigstore, etc., bundled
-# inside every node:*-alpine image) is what Trivy was flagging, not
-# anything in our package.json.
+# npm ci installs exactly what's pinned in package-lock.json. Then remove
+# the npm CLI itself — we only ever run `node server.js` at runtime, and
+# npm's own vendored dependency tree (tar, glob, minimatch, pacote,
+# sigstore, etc., bundled inside every node:*-alpine image) is what Trivy
+# was flagging, not anything in our package.json.
 RUN npm ci --omit=dev \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 COPY server.js ./
-COPY public ./public
+COPY --from=build /app/dist ./dist
 
 # Matches app1-frontend's Deployment: runAsUser 101, containerPort 8080.
 USER 101
