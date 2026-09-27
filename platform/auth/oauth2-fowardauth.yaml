@@ -14,13 +14,13 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: oauth2-proxy-redirect
+  name: oauth2-proxy-errors
   namespace: auth
 spec:
-  plugin:
-    redirectErrors:
-      status:
-        - "401"
-        - "403"
-      target: "http://oauth2-proxy.auth.svc.cluster.local:4180/oauth2/sign_in?rd={url}"
-      outputStatus: 302
+  errors:
+    status:
+      - "401-403"
+    service:
+      name: oauth2-proxy
+      port: 4180
+    query: /oauth2/sign_in?rd={url}
