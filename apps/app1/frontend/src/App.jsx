@@ -5,8 +5,8 @@ const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR
 
 export default function App() {
   const [amount, setAmount] = useState("1");
-  const [from, setFrom] = useState("SGD");
-  const [to, setTo] = useState("JPY");
+  const [from, setFrom] = useState("JPY");
+  const [to, setTo] = useState("SGD");
   const [useCustomRate, setUseCustomRate] = useState(false);
   const [customRate, setCustomRate] = useState("");
   const [result, setResult] = useState(null);
