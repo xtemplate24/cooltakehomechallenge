@@ -1,4 +1,17 @@
 import "./App.css";
+// apps/landing/src/App.jsx
+import { useEffect, useState } from "react";
+
+// inside App():
+const [user, setUser] = useState(null); // null = checking, string = signed in, false = not
+
+useEffect(() => {
+  fetch("/oauth2/auth", { credentials: "include" })
+    .then((res) =>
+      setUser(res.ok ? res.headers.get("X-Auth-Request-User") || "signed in" : false)
+    )
+    .catch(() => setUser(false));
+}, []);
 
 const apps = [
   { name: "App One", path: "/app1" },
@@ -36,8 +49,8 @@ export default function App() {
             <span>this page: public</span>
           </div>
           <div className="status-row">
-            <span className="dot dot-auth" />
-            <span>everything else: GitHub OAuth</span>
+            <span className={`dot ${user ? "dot-ok" : "dot-auth"}`} />
+            <span>{user ? `signed in as ${user}` : "not signed in"}</span>
           </div>
           <div className="status-row">
             <span className="dot dot-ok" />

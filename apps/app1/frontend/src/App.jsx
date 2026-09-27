@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 
-const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", ];
+const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR", "SGD"];
 
 export default function App() {
   const [amount, setAmount] = useState("1");
