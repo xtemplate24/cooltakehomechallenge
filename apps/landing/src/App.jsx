@@ -57,7 +57,7 @@ export default function App() {
           </div>
           <div className="status-row">
             <span className={`dot ${user ? "dot-ok" : "dot-auth"}`} />
-            <span>{user ? `signed in as ${user}` : "not signed in"}</span>
+            <span>{user ? `signed in` : "not signed in"}</span>
           </div>
         </aside>
       </div>
