@@ -103,3 +103,8 @@ button:disabled { opacity: 0.5; cursor: default; }
   .hint { display: none; }
   .msg { max-width: 90%; }
 }
+
+button,
+input {
+  font-family: inherit;
+}
