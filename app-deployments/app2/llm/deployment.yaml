@@ -21,7 +21,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: llm
-          image: ghcr.io/xtemplate24/app2-llm@sha256:26e09001b9a9d6c9fad318f83805953e11ce441ded0038380afb0555dfdbb56a
+          image: ghcr.io/xtemplate24/app2-llm@sha256:b1fb427ed377cf3daad6c74f1604a9fd49e71f46b17fdff8c1b0613c91808e6f
           imagePullPolicy: IfNotPresent
           env:
             - name: HOME
