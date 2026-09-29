@@ -1,0 +1,105 @@
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: #101a1c;
+  color: #e8ecea;
+  font-family: system-ui, sans-serif;
+}
+
+.layout { display: flex; height: 100%; }
+
+.sidebar {
+  width: 240px;
+  flex: none;
+  padding: 16px;
+  border-right: 1px solid #223133;
+  background: #131f21;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-item {
+  display: flex;
+  border: 1px solid #223133;
+  border-radius: 6px;
+}
+.chat-item.active { border-color: #f2a65a; }
+
+.chat-title {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 10px;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-delete {
+  background: none;
+  border: none;
+  color: #7e9296;
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.hint { margin-top: auto; color: #7e9296; font-size: 0.8rem; }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.empty { color: #7e9296; margin: auto; }
+
+.msg {
+  max-width: 75%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+}
+.msg.user { align-self: flex-end; background: #f2a65a; color: #101a1c; }
+.msg.assistant { align-self: flex-start; background: #1b2a2d; }
+
+.error { margin: 0 24px 8px; color: #e07a6b; font-size: 0.9rem; }
+
+.composer { display: flex; gap: 8px; padding: 16px 24px; border-top: 1px solid #223133; }
+.composer input {
+  flex: 1;
+  padding: 12px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #223133;
+  background: #0c1516;
+  color: #e8ecea;
+}
+
+button.primary {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #f2a65a;
+  color: #101a1c;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 700px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid #223133; }
+  .hint { display: none; }
+  .msg { max-width: 90%; }
+}

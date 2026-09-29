@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app2-ingress
+  namespace: app2
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      auth-oauth2-proxy-errors@kubernetescrd,
+      auth-oauth2-proxy-auth@kubernetescrd,
+      app2-strip-app2@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - xtemplate.tail9d78f5.ts.net
+  rules:
+    - host: xtemplate.tail9d78f5.ts.net
+      http:
+        paths:
+          - path: /app2
+            pathType: Prefix
+            backend:
+              service:
+                name: app2-svc
+                port:
+                  name: http
