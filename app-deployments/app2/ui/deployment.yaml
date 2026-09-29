@@ -21,7 +21,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: nginx
-          image: ghcr.io/xtemplate24/app2-ui@sha256:b60860508e77c9cbf8ba3122b61fae86f3ce5b4c7de466ffa3a55d72b3c111b8
+          image: ghcr.io/xtemplate24/app2-ui@sha256:5657c5b5ff1ef6849c98fa3b777e52e064658aa54013098b8a90125add658583
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
