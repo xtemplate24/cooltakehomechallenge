@@ -5,7 +5,7 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 
 
 tailscale resolution issue
-   sudo systemctl restart tailscaled
-   sudo tailscale funnel reset
-   sudo tailscale funnel https+insecure://localhost:443
-   tailscale funnel status
+sudo systemctl restart tailscaled
+sudo tailscale funnel reset
+sudo tailscale funnel https+insecure://localhost:443
+tailscale funnel status

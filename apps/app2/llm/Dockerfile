@@ -10,7 +10,9 @@ RUN curl -fL -o /model.gguf \
 # and replace the tag below with tag@sha256:...
 FROM ghcr.io/ggml-org/llama.cpp:server
 
-COPY --from=model --chmod=0644 /model.gguf /models/model.gguf
+# Create the folder with normal permissions (owner can write, everyone can read/enter)
+RUN mkdir -p /models && chmod 755 /models
+COPY --from=model /model.gguf /models/model.gguf
 
 USER 101
 EXPOSE 8080
