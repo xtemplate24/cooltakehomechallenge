@@ -18,4 +18,4 @@ USER 101
 EXPOSE 8080
 
 ENTRYPOINT ["/app/llama-server"]
-CMD ["-m", "/models/model.gguf", "--host", "0.0.0.0", "--port", "8080", "-c", "2048", "-np", "1", "--threads", "4"]
+CMD ["-m", "/models/model.gguf", "--host", "0.0.0.0", "--port", "8080", "-c", "4096", "-np", "1", "--threads", "4"]
