@@ -1,21 +1,40 @@
-# Stage 1: download the model file (curl lives here, not in the final image)
+# Stage 1: Download both GGUF shards
 FROM alpine:3.20 AS model
-RUN apk add --no-cache curl
-RUN curl -fL -o /model.gguf \
-  https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf
 
-# Stage 2: the llama.pp web server
-# TODO: pin by digest. Run `docker pull ghcr.io/ggml-org/llama.cpp:server`
-# then `docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/ggml-org/llama.cpp:server`
-# and replace the tag below with tag@sha256:...
+RUN apk add --no-cache curl
+
+RUN mkdir -p /models
+
+RUN curl -fL --retry 10 --retry-delay 5 \
+-o /models/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf \
+https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf
+
+RUN curl -fL --retry 10 --retry-delay 5 \
+-o /models/qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf \
+https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf
+
+
+# Stage 2: llama.cpp server
 FROM ghcr.io/ggml-org/llama.cpp:server
 
-# Create the folder with normal permissions (owner can write, everyone can read/enter)
+USER root
+
 RUN mkdir -p /models && chmod 755 /models
-COPY --from=model /model.gguf /models/model.gguf
+
+COPY --from=model /models/ /models/
 
 USER 101
+
 EXPOSE 8080
 
 ENTRYPOINT ["/app/llama-server"]
-CMD ["-m", "/models/model.gguf", "--host", "0.0.0.0", "--port", "8080", "-c", "4096", "-np", "1", "--threads", "4"]
+
+CMD [
+"-m",
+"/models/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
+"--host", "0.0.0.0",
+"--port", "8080",
+"-c", "4096",
+"-np", "1",
+"--threads", "4"
+]
