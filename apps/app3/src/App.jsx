@@ -54,7 +54,7 @@ export default function App() {
   };
 
   const deleteAll = async () => {
-    await call("/api/data", { method: "DELETE" }); 
+    await call("/data", { method: "DELETE" }); 
     await refresh();
   };
 
