@@ -27,7 +27,7 @@ spec:
       containers:
         - name: app3
           # The build-image pipeline fills in the @sha256 digest after the first push.
-          image: ghcr.io/xtemplate24/app3@sha256:8853a1d8b3403cc5adab5d825a0788b65d2d5556ee20b1e62aeb2d2786bc01d6
+          image: ghcr.io/xtemplate24/app3@sha256:4f6683d1eb2957f1ccf76d62beea00b7bf455c90733c8bcf1f0ce33504efab0d
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_PATH
