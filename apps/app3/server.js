@@ -29,6 +29,8 @@ const q = {
   addSession: db.prepare(
     "INSERT INTO sessions (user, exercise, kind, reps, effort, ts) VALUES (?, ?, ?, ?, ?, ?)"
   ),
+  deleteAllExercisesByUser: db.prepare("DELETE FROM custom_exercises WHERE user = ?"),
+  deleteAllSessionsForUser: db.prepare("DELETE FROM sessions WHERE user = ?"),
 };
 
 const json = (res, code, body) => {
@@ -90,6 +92,11 @@ http
           if (effort !== null && !(Number.isInteger(effort) && effort >= 1 && effort <= 5))
             return json(res, 400, { error: "effort must be 1-5" });
           q.addSession.run(user, exercise, b.kind, reps, effort, new Date().toISOString());
+          return json(res, 200, { ok: true });
+        }
+        if (req.method === "DELETE" && p === "/api/data") {
+          q.deleteAllExercisesByUser.run(user);
+          q.deleteAllSessionsForUser.run(user);
           return json(res, 200, { ok: true });
         }
         return json(res, 404, { error: "not found" });
