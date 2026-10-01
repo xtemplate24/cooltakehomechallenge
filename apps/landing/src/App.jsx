@@ -2,9 +2,9 @@ import "./App.css";
 import { useEffect, useState } from "react";
 
 const apps = [
-  { name: "App One - Currency Converter", path: "/app1" },
-  { name: "App Two - Local LLM", path: "/app2" },
-  { name: "App Two - Exercise tracker", path: "/app3" }
+  { name: "One - Currency Converter", path: "/app1" },
+  { name: "Two - Local LLM", path: "/app2" },
+  { name: "Three - Workout tracker", path: "/app3" }
 ];
 
 export default function App() {
