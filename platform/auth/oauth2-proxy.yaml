@@ -23,6 +23,7 @@ spec:
         - name: oauth2-proxy
           image: quay.io/oauth2-proxy/oauth2-proxy@sha256:b1b2021fe8f4004573e8d690dec6c7bb29cc44364572cf8510a05bf3a0ae2ded
           args:
+            - --set-xauthrequest=true
             - --whitelist-domain=xtemplate.tail9d78f5.ts.net
             - --provider=github
             - --http-address=0.0.0.0:4180
