@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 
 const API = `${import.meta.env.BASE_URL}api`;
 const DEFAULTS = ["Push ups", "Pull ups", "Crunches", "Squats"];
-const REST_SECONDS = 120;
+const DEFAULT_REST = 60;
+const MAX_SETS = 5;
 const COLORS = ["#f2a65a", "#6fd6c4", "#8fa8ff", "#e07a9f", "#c9d36a", "#b58cf0", "#f08a5d", "#5fc2e8"];
 
 async function call(path, { method, body } = {}) {
@@ -14,6 +15,21 @@ async function call(path, { method, body } = {}) {
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `Error ${res.status}`);
   return res.json();
 }
+
+const dayKey = (t) => {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+};
+const latestMax = (sessions, ex) => {
+  const a = sessions.filter((s) => s.exercise === ex && s.kind === "assessment");
+  return a.length ? a[a.length - 1].reps : null;
+};
+const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+// Recommended 5-set pattern: n/2, n/2+x, n/2, n/2, n/2+x
+const recommend = (max, x) => {
+  const h = Math.floor(max / 2);
+  return [h, h + x, h, h, h + x];
+};
 
 // Browsers only allow sound after a tap, so unlockAudio() is called from button clicks.
 let audioCtx;
@@ -27,7 +43,7 @@ function chime() {
   navigator.vibrate?.(200);
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  [659.25, 783.99, 1046.5].forEach((freq, k) => { // three rising notes: E5, G5, C6
+  [659.25, 783.99, 1046.5].forEach((freq, k) => {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     const t = now + k * 0.18;
@@ -42,20 +58,10 @@ function chime() {
   });
 }
 
-const dayKey = (t) => {
-  const d = new Date(t);
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-};
-const latestMax = (sessions, ex) => {
-  const a = sessions.filter((s) => s.exercise === ex && s.kind === "assessment");
-  return a.length ? a[a.length - 1].reps : null;
-};
-const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-
 export default function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-  const [screen, setScreen] = useState("home"); // home | mode | assess | train | stats
+  const [screen, setScreen] = useState("home"); // home | mode | assess | train | adhoc | plan | stats
   const [exercise, setExercise] = useState(null);
   const [newName, setNewName] = useState("");
 
@@ -64,6 +70,12 @@ export default function App() {
 
   const save = async (session) => {
     await call("/sessions", { body: { exercise, ...session } });
+    await refresh();
+    setScreen("mode");
+  };
+
+  const savePlan = async (plan) => {
+    await call("/plans", { body: { exercise, ...plan } });
     await refresh();
     setScreen("mode");
   };
@@ -81,7 +93,7 @@ export default function App() {
   };
 
   const deleteAll = async () => {
-    await call("/data", { method: "DELETE" }); 
+    await call("/data", { method: "DELETE" });
     await refresh();
   };
 
@@ -89,6 +101,7 @@ export default function App() {
   if (!data) return <div className="page"><div className="spinner" /></div>;
 
   const max = exercise ? latestMax(data.sessions, exercise) : null;
+  const plan = exercise ? data.plans.find((p) => p.exercise === exercise) || null : null;
 
   return (
     <div className="page">
@@ -117,22 +130,102 @@ export default function App() {
         {screen === "mode" && (
           <section>
             <h1>{exercise}</h1>
-            <p className="muted">{max === null ? "No assessment yet." : `Current max: ${max} reps`}</p>
+            <p className="muted">
+              {max === null ? "No assessment yet." : `Current max: ${max} reps`}
+              {" · "}
+              {plan ? `Plan: ${plan.sets} set${plan.sets > 1 ? "s" : ""}, rest ${fmt(plan.rest)}` : "No training plan set."}
+            </p>
             <div className="grid">
               <button style={{ "--i": 0 }} className="big" onClick={() => setScreen("assess")}>Assessment</button>
-              <button style={{ "--i": 1 }} className="big" disabled={max === null} onClick={() => setScreen("train")}>Daily training</button>
-              <button style={{ "--i": 2, gridColumn: "1 / -1" }} className="big" onClick={() => setScreen("adhoc")}>Ad-hoc</button>
+              <button style={{ "--i": 1 }} className="big" disabled={!plan && max === null} onClick={() => setScreen("train")}>Daily training</button>
+              <button style={{ "--i": 2 }} className="big" onClick={() => setScreen("plan")}>Training plan</button>
+              <button style={{ "--i": 3 }} className="big" onClick={() => setScreen("adhoc")}>Ad-hoc</button>
             </div>
-            {max === null && <p className="muted">Do an assessment first so we know your max.</p>}
+            {!plan && max === null && <p className="muted">Set a training plan or do an assessment to unlock daily training.</p>}
           </section>
         )}
 
         {screen === "assess" && <Assessment exercise={exercise} onSave={save} onBack={() => setScreen("mode")} />}
-        {screen === "train" && <Training exercise={exercise} max={max} onSave={save} onBack={() => setScreen("mode")} />}
+        {screen === "train" && <Training exercise={exercise} max={max} plan={plan} onSave={save} onBack={() => setScreen("mode")} />}
         {screen === "adhoc" && <AdHoc exercise={exercise} onSave={save} onBack={() => setScreen("mode")} />}
+        {screen === "plan" && <PlanEditor exercise={exercise} plan={plan} max={max} onSave={savePlan} onBack={() => setScreen("mode")} />}
         {screen === "stats" && <Stats sessions={data.sessions} custom={data.custom} onDelete={deleteAll} />}
       </div>
     </div>
+  );
+}
+
+function Stepper({ value, onChange, min, max, step = 1, display }) {
+  return (
+    <div className="stepper">
+      <button onClick={() => onChange(Math.max(min, value - step))} disabled={value <= min} aria-label="decrease">−</button>
+      <b>{display ? display(value) : value}</b>
+      <button onClick={() => onChange(Math.min(max, value + step))} disabled={value >= max} aria-label="increase">+</button>
+    </div>
+  );
+}
+
+function PlanEditor({ exercise, plan, max, onSave, onBack }) {
+  const [sets, setSets] = useState(plan?.sets ?? 3);
+  const [reps, setReps] = useState(() => {
+    const r = (plan?.reps ?? []).map(String);
+    while (r.length < MAX_SETS) r.push(r.length ? r[r.length - 1] : "10");
+    return r;
+  });
+  const [rest, setRest] = useState(plan?.rest ?? DEFAULT_REST);
+  const [x, setX] = useState(2);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const rec = max === null ? null : recommend(max, x);
+  const valid = reps.slice(0, sets).every((v) => parseInt(v, 10) > 0);
+
+  const submit = () => {
+    setBusy(true);
+    onSave({ sets, reps: reps.slice(0, sets).map((v) => parseInt(v, 10)), rest })
+      .catch((e) => { setErr(e.message); setBusy(false); });
+  };
+
+  return (
+    <section>
+      <h1>{exercise} — training plan</h1>
+
+      <div className="reco">
+        {rec ? (
+          <>
+            <p className="muted" style={{ margin: 0 }}>Recommended (from your max of {max})</p>
+            <p className="reco-sets">{rec.join(" · ")}</p>
+            <label style={{ marginTop: 0 }}>x (extra reps on sets 2 and 5)</label>
+            <Stepper value={x} onChange={setX} min={0} max={50} />
+            <button className="primary" style={{ marginTop: 12 }} onClick={() => { setSets(5); setReps(rec.map(String)); }}>
+              Use recommended
+            </button>
+          </>
+        ) : (
+          <p className="muted" style={{ margin: 0 }}>
+            No recommendation yet — you haven't done an assessment for this exercise.
+          </p>
+        )}
+      </div>
+
+      <label>Number of sets (1–{MAX_SETS})</label>
+      <Stepper value={sets} onChange={setSets} min={1} max={MAX_SETS} />
+
+      <label>Reps per set</label>
+      {reps.slice(0, sets).map((v, k) => (
+        <div key={k} className="setrow">
+          <span>Set {k + 1}</span>
+          <input type="number" min="1" value={v} onChange={(e) => setReps(reps.map((o, j) => (j === k ? e.target.value : o)))} />
+        </div>
+      ))}
+
+      <label>Rest between sets</label>
+      <Stepper value={rest} onChange={setRest} min={10} max={600} step={10} display={fmt} />
+
+      <button className="primary huge" disabled={!valid || busy} onClick={submit}>Save plan</button>
+      {err && <p className="error">{err}</p>}
+      <button className="link" onClick={onBack}>Back</button>
+    </section>
   );
 }
 
@@ -175,17 +268,18 @@ function Assessment({ exercise, onSave, onBack }) {
   );
 }
 
-function Training({ exercise, max, onSave, onBack }) {
+function Training({ exercise, max, plan: saved, onSave, onBack }) {
+  // A saved plan wins. Without one we fall back to the recommended pattern from the max.
   const [x, setX] = useState("2");
   const [phase, setPhase] = useState("setup"); // setup | set | rest | effort
   const [i, setI] = useState(0);
-  const [left, setLeft] = useState(REST_SECONDS);
-  const [total, setTotal] = useState(REST_SECONDS);
+  const restSecs = saved ? saved.rest : DEFAULT_REST;
+  const [left, setLeft] = useState(restSecs);
+  const [total, setTotal] = useState(restSecs);
   const [err, setErr] = useState(null);
 
-  const h = Math.floor(max / 2);
   const xn = Math.max(0, parseInt(x, 10) || 0);
-  const plan = [h, h + xn, h, h, h + xn];
+  const plan = saved ? saved.reps : recommend(max, xn);
 
   const nextSet = () => { setI(i + 1); setPhase("set"); };
 
@@ -199,8 +293,8 @@ function Training({ exercise, max, onSave, onBack }) {
   const finishSet = () => {
     unlockAudio();
     if (i === plan.length - 1) return setPhase("effort");
-    setLeft(REST_SECONDS);
-    setTotal(REST_SECONDS);
+    setLeft(restSecs);
+    setTotal(restSecs);
     setPhase("rest");
   };
 
@@ -221,12 +315,16 @@ function Training({ exercise, max, onSave, onBack }) {
       )}
       {phase === "setup" && (
         <>
-          <p className="muted">Max {max} → sets: {plan.join(", ")}</p>
-          <label>Your x (extra reps on sets 2 and 5)</label>
-          <div className="row">
-            <input type="number" min="0" value={x} onChange={(e) => setX(e.target.value)} />
-            <button className="primary" onClick={() => { unlockAudio(); setPhase("set"); }}>Begin</button>
-          </div>
+          {saved ? (
+            <p className="muted">Your plan: {plan.join(", ")} reps · rest {fmt(restSecs)}</p>
+          ) : (
+            <>
+              <p className="muted">No saved plan — using the recommended pattern from your max of {max}: {plan.join(", ")}</p>
+              <label>Your x (extra reps on sets 2 and 5)</label>
+              <input type="number" min="0" value={x} onChange={(e) => setX(e.target.value)} style={{ marginTop: 8 }} />
+            </>
+          )}
+          <button className="primary huge" onClick={() => { unlockAudio(); setPhase("set"); }}>Begin</button>
         </>
       )}
       {phase === "set" && (
@@ -273,13 +371,45 @@ function Training({ exercise, max, onSave, onBack }) {
   );
 }
 
+function AdHoc({ exercise, onSave, onBack }) {
+  const [reps, setReps] = useState("");
+  const [effort, setEffort] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const n = parseInt(reps, 10);
+
+  const submit = () => {
+    setBusy(true);
+    onSave({ kind: "adhoc", reps: n, effort }).catch((e) => { setErr(e.message); setBusy(false); });
+  };
+
+  return (
+    <section>
+      <h1>{exercise} — ad-hoc</h1>
+      <p className="muted">Log extra reps done outside your normal training.</p>
+      <label>Reps</label>
+      <div className="row">
+        <input type="number" min="1" autoFocus value={reps} placeholder="e.g. 15" onChange={(e) => setReps(e.target.value)} />
+      </div>
+      <label>Effort (1 easy – 5 max effort)</label>
+      <div className="row">
+        {[1, 2, 3, 4, 5].map((k) => (
+          <button key={k} className={effort === k ? "big sel" : "big"} onClick={() => setEffort(k)}>{k}</button>
+        ))}
+      </div>
+      <button className="primary huge" disabled={!(n > 0) || !effort || busy} onClick={submit}>Save</button>
+      {err && <p className="error">{err}</p>}
+      <button className="link" onClick={onBack}>Back</button>
+    </section>
+  );
+}
+
 function Stats({ sessions, custom, onDelete }) {
   const [filter, setFilter] = useState("All");
 
-  const names = [...new Set([...DEFAULTS, ...custom, ...sessions.map((s) => s.exercise)])].filter((n) =>
-    sessions.some((s) => s.exercise === n)
-  );
-  const colorOf = (n) => COLORS[[...new Set([...DEFAULTS, ...custom, ...sessions.map((s) => s.exercise)])].indexOf(n) % COLORS.length];
+  const allNames = [...new Set([...DEFAULTS, ...custom, ...sessions.map((s) => s.exercise)])];
+  const names = allNames.filter((n) => sessions.some((s) => s.exercise === n));
+  const colorOf = (n) => COLORS[allNames.indexOf(n) % COLORS.length];
 
   if (!sessions.length && !custom.length)
     return <section><h1>My stats</h1><p className="muted">Nothing logged yet.</p></section>;
@@ -427,7 +557,7 @@ function DeleteAll({ onDelete }) {
         <button className="danger-btn" onClick={() => setOpen(true)}>Delete all data</button>
       ) : (
         <div className="danger-box">
-          <p>This permanently deletes every session, max, and custom exercise. It can't be undone.</p>
+          <p>This permanently deletes every session, max, training plan, and custom exercise. It can't be undone.</p>
           <label>Type DELETE to confirm</label>
           <div className="row">
             <input value={text} onChange={(e) => setText(e.target.value)} placeholder="DELETE" />
@@ -440,38 +570,5 @@ function DeleteAll({ onDelete }) {
         </div>
       )}
     </div>
-  );
-}
-
-function AdHoc({ exercise, onSave, onBack }) {
-  const [reps, setReps] = useState("");
-  const [effort, setEffort] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(null);
-  const n = parseInt(reps, 10);
-
-  const submit = () => {
-    setBusy(true);
-    onSave({ kind: "adhoc", reps: n, effort }).catch((e) => { setErr(e.message); setBusy(false); });
-  };
-
-  return (
-    <section>
-      <h1>{exercise} — ad-hoc</h1>
-      <p className="muted">Log extra reps done outside your normal training.</p>
-      <label>Reps</label>
-      <div className="row">
-        <input type="number" min="1" autoFocus value={reps} placeholder="e.g. 15" onChange={(e) => setReps(e.target.value)} />
-      </div>
-      <label>Effort (1 easy – 5 max effort)</label>
-      <div className="row">
-        {[1, 2, 3, 4, 5].map((k) => (
-          <button key={k} className={effort === k ? "big sel" : "big"} onClick={() => setEffort(k)}>{k}</button>
-        ))}
-      </div>
-      <button className="primary huge" disabled={!(n > 0) || !effort || busy} onClick={submit}>Save</button>
-      {err && <p className="error">{err}</p>}
-      <button className="link" onClick={onBack}>Back</button>
-    </section>
   );
 }

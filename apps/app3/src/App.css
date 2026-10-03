@@ -18,6 +18,7 @@ h2 { font-size: 1.05rem; margin: 30px 0 10px; color: #b7c3c5; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes pop { 0% { opacity: 0; transform: scale(0.5); } 70% { transform: scale(1.12); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -50,14 +51,24 @@ button:active:not(:disabled) { transform: scale(0.97); }
 button:disabled { opacity: 0.4; cursor: default; }
 button.big { padding: 24px 10px; font-size: 1.1rem; font-family: "Space Grotesk", sans-serif; flex: 1; background: linear-gradient(160deg, #162528, #101a1c); }
 button.big:hover:not(:disabled) { border-color: #f2a65a; box-shadow: 0 6px 20px #f2a65a22; }
+button.big.sel { background: #f2a65a; color: #101a1c; border-color: #f2a65a; }
 button.primary { background: linear-gradient(135deg, #f7b872, #f2a65a); color: #101a1c; border: 0; font-weight: 600; font-family: "Space Grotesk", sans-serif; }
 button.primary:hover:not(:disabled) { box-shadow: 0 6px 18px #f2a65a44; }
 button.huge { width: 100%; padding: 22px; font-size: 1.3rem; margin-top: 14px; animation: pulse 2s ease-in-out infinite; }
+button.huge:disabled { animation: none; }
 button.link { background: none; border: 0; color: #7e9296; margin-top: 24px; padding: 0; text-decoration: underline; font-size: 0.95rem; }
 button.link:hover { color: #e8ecea; transform: none; }
 input { flex: 1; min-width: 0; padding: 12px; font-size: 1rem; border-radius: 8px; border: 1px solid #223133; background: #0c1516; color: #e8ecea; transition: border-color 0.2s, box-shadow 0.2s; }
 input:focus { outline: none; border-color: #f2a65a; box-shadow: 0 0 0 3px #f2a65a22; }
-button.big.sel { background: #f2a65a; color: #101a1c; border-color: #f2a65a; }
+
+/* ---------- training plan ---------- */
+.stepper { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.stepper button { width: 46px; height: 46px; padding: 0; font-size: 1.4rem; line-height: 1; }
+.stepper b { min-width: 72px; text-align: center; font-family: "IBM Plex Mono", monospace; font-size: 1.5rem; font-weight: 500; }
+.setrow { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.setrow span { width: 56px; color: #7e9296; font-size: 0.9rem; }
+.reco { margin-top: 16px; padding: 14px; border: 1px dashed #3a5558; border-radius: 10px; background: #0f191b; }
+.reco-sets { font-family: "IBM Plex Mono", monospace; font-size: 1.3rem; margin: 6px 0 14px; color: #6fd6c4; }
 
 /* ---------- timers ---------- */
 .clock { font-family: "IBM Plex Mono", monospace; font-size: 6rem; font-weight: 500; text-align: center; margin: 24px 0 4px; font-variant-numeric: tabular-nums; }
@@ -84,7 +95,6 @@ button.big.sel { background: #f2a65a; color: #101a1c; border-color: #f2a65a; }
 .hbar-label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; }
 .track { background: #131f21; border-radius: 4px; height: 10px; overflow: hidden; }
 .fill { height: 100%; border-radius: 4px; transform-origin: left; animation: grow-x 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { padding: 6px 12px; font-size: 0.85rem; border-radius: 999px; }
