@@ -87,7 +87,7 @@ http
           const reps = Number(b.reps);
           const effort = b.effort == null ? null : Number(b.effort);
           if (!exercise || exercise.length > 30) return json(res, 400, { error: "bad exercise" });
-          if (!["assessment", "training"].includes(b.kind)) return json(res, 400, { error: "bad kind" });
+          if (!["assessment", "training", "adhoc"].includes(b.kind)) return json(res, 400, { error: "bad kind" });
           if (!Number.isInteger(reps) || reps < 0 || reps > 10000) return json(res, 400, { error: "bad reps" });
           if (effort !== null && !(Number.isInteger(effort) && effort >= 1 && effort <= 5))
             return json(res, 400, { error: "effort must be 1-5" });

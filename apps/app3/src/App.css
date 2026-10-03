@@ -57,6 +57,7 @@ button.link { background: none; border: 0; color: #7e9296; margin-top: 24px; pad
 button.link:hover { color: #e8ecea; transform: none; }
 input { flex: 1; min-width: 0; padding: 12px; font-size: 1rem; border-radius: 8px; border: 1px solid #223133; background: #0c1516; color: #e8ecea; transition: border-color 0.2s, box-shadow 0.2s; }
 input:focus { outline: none; border-color: #f2a65a; box-shadow: 0 0 0 3px #f2a65a22; }
+button.big.sel { background: #f2a65a; color: #101a1c; border-color: #f2a65a; }
 
 /* ---------- timers ---------- */
 .clock { font-family: "IBM Plex Mono", monospace; font-size: 6rem; font-weight: 500; text-align: center; margin: 24px 0 4px; font-variant-numeric: tabular-nums; }

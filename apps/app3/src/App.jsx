@@ -15,6 +15,33 @@ async function call(path, { method, body } = {}) {
   return res.json();
 }
 
+// Browsers only allow sound after a tap, so unlockAudio() is called from button clicks.
+let audioCtx;
+function unlockAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch {}
+}
+function chime() {
+  navigator.vibrate?.(200);
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  [659.25, 783.99, 1046.5].forEach((freq, k) => { // three rising notes: E5, G5, C6
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const t = now + k * 0.18;
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 1.3);
+  });
+}
+
 const dayKey = (t) => {
   const d = new Date(t);
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -94,6 +121,7 @@ export default function App() {
             <div className="grid">
               <button style={{ "--i": 0 }} className="big" onClick={() => setScreen("assess")}>Assessment</button>
               <button style={{ "--i": 1 }} className="big" disabled={max === null} onClick={() => setScreen("train")}>Daily training</button>
+              <button style={{ "--i": 2, gridColumn: "1 / -1" }} className="big" onClick={() => setScreen("adhoc")}>Ad-hoc</button>
             </div>
             {max === null && <p className="muted">Do an assessment first so we know your max.</p>}
           </section>
@@ -101,6 +129,7 @@ export default function App() {
 
         {screen === "assess" && <Assessment exercise={exercise} onSave={save} onBack={() => setScreen("mode")} />}
         {screen === "train" && <Training exercise={exercise} max={max} onSave={save} onBack={() => setScreen("mode")} />}
+        {screen === "adhoc" && <AdHoc exercise={exercise} onSave={save} onBack={() => setScreen("mode")} />}
         {screen === "stats" && <Stats sessions={data.sessions} custom={data.custom} onDelete={deleteAll} />}
       </div>
     </div>
@@ -113,7 +142,8 @@ function Assessment({ exercise, onSave, onBack }) {
   const [err, setErr] = useState(null);
 
   useEffect(() => {
-    if (count === null || count <= 0) return;
+    if (count === null) return;
+    if (count === 0) { chime(); return; }
     const t = setTimeout(() => setCount(count - 1), 1000);
     return () => clearTimeout(t);
   }, [count]);
@@ -127,7 +157,7 @@ function Assessment({ exercise, onSave, onBack }) {
   return (
     <section>
       <h1>{exercise} — assessment</h1>
-      {count === null && <button className="primary huge" onClick={() => setCount(3)}>Start</button>}
+      {count === null && <button className="primary huge" onClick={() => { unlockAudio(); setCount(3); }}>Start</button>}
       {count > 0 && <div key={count} className="clock pop">{count}</div>}
       {count === 0 && (
         <>
@@ -161,12 +191,13 @@ function Training({ exercise, max, onSave, onBack }) {
 
   useEffect(() => {
     if (phase !== "rest") return;
-    if (left <= 0) return nextSet();
+    if (left <= 0) { chime(); return nextSet(); }
     const t = setTimeout(() => setLeft((l) => l - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, left]);
 
   const finishSet = () => {
+    unlockAudio();
     if (i === plan.length - 1) return setPhase("effort");
     setLeft(REST_SECONDS);
     setTotal(REST_SECONDS);
@@ -194,7 +225,7 @@ function Training({ exercise, max, onSave, onBack }) {
           <label>Your x (extra reps on sets 2 and 5)</label>
           <div className="row">
             <input type="number" min="0" value={x} onChange={(e) => setX(e.target.value)} />
-            <button className="primary" onClick={() => setPhase("set")}>Begin</button>
+            <button className="primary" onClick={() => { unlockAudio(); setPhase("set"); }}>Begin</button>
           </div>
         </>
       )}
@@ -409,5 +440,38 @@ function DeleteAll({ onDelete }) {
         </div>
       )}
     </div>
+  );
+}
+
+function AdHoc({ exercise, onSave, onBack }) {
+  const [reps, setReps] = useState("");
+  const [effort, setEffort] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+  const n = parseInt(reps, 10);
+
+  const submit = () => {
+    setBusy(true);
+    onSave({ kind: "adhoc", reps: n, effort }).catch((e) => { setErr(e.message); setBusy(false); });
+  };
+
+  return (
+    <section>
+      <h1>{exercise} — ad-hoc</h1>
+      <p className="muted">Log extra reps done outside your normal training.</p>
+      <label>Reps</label>
+      <div className="row">
+        <input type="number" min="1" autoFocus value={reps} placeholder="e.g. 15" onChange={(e) => setReps(e.target.value)} />
+      </div>
+      <label>Effort (1 easy – 5 max effort)</label>
+      <div className="row">
+        {[1, 2, 3, 4, 5].map((k) => (
+          <button key={k} className={effort === k ? "big sel" : "big"} onClick={() => setEffort(k)}>{k}</button>
+        ))}
+      </div>
+      <button className="primary huge" disabled={!(n > 0) || !effort || busy} onClick={submit}>Save</button>
+      {err && <p className="error">{err}</p>}
+      <button className="link" onClick={onBack}>Back</button>
+    </section>
   );
 }
